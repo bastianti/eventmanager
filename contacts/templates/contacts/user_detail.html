@@ -1,23 +1,28 @@
 <html>
-<title>Details für {{first_name}} {{last_name}}</title>
+<title>User Details</title>
 <body>
 <form action=details method=GET>
 <input type=text name=searchterm>
 <input type=submit>
-</form>
-<table border=1>
-{% for user in user_list %}
-<p>
-<tr>
-<td>Vorname</td><td>{{ user.first_name }}
-</tr>
-<tr>
-<td>Nachname</td><td>{{ user.last_name }}
-</tr>
-<tr>
-<td>Straße</td><td>{{ user.street }}
-</tr>
-</p>
+{% if error %}
+    <h5>{{error}}</h5>
+{% else %}
+   <table border=1>
+    {% for user in user_list %}
+    <tr>
+      <th>Vorname</th><th>Nachname</th><th>Straße</th><th>EMail</th>
+    </tr>
+    <tr>
+      <td>{{ user.last_name }}<td>{{ user.first_name }}</td><td>{{ user.street }}</td><td> {{ user.email }}</td>
+    </tr>
 {% endfor %}
 </table>
+{% endif %}
+
+<script>
+alink = "export_csv" + window.location.search
+link_desc = "Nach CSV exportieren"
+document.write(link_desc.link(alink))
+</script>
+</form>
 </html>
