@@ -23,18 +23,14 @@ def show_members(request):
 
 def details(request):
     template = loader.get_template("contacts/user_detail.html")
-    search = "exist"
-    member_list = ""
-    # TODO How to avoid empty search
-    # How to avoid exception handling here, looks ugly 
-    try:
+
+    if 'searchterm' in request.GET:
         member_list = User.objects.filter(first_name__contains=request.GET['searchterm'])
-    except KeyError:
-        pass
+    else:
+        member_list = tuple()
 
     context = {
-         'user_list':member_list,
-         'search': search }
+        'user_list': member_list,
+    }
 
     return HttpResponse(template.render(context, request))
-# Create your views here.
