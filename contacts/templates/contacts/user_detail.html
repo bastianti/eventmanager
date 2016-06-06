@@ -1,0 +1,23 @@
+<html>
+<title>Details für {{first_name}} {{last_name}}</title>
+<body>
+<form action=details method=GET>
+<input type=text name=searchterm>
+<input type=submit>
+</form>
+<table border=1>
+{% for user in user_list %}
+<p>
+<tr>
+<td>Vorname</td><td>{{ user.first_name }}
+</tr>
+<tr>
+<td>Nachname</td><td>{{ user.last_name }}
+</tr>
+<tr>
+<td>Straße</td><td>{{ user.street }}
+</tr>
+</p>
+{% endfor %}
+</table>
+</html>

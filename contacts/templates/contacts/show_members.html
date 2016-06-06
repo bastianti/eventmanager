@@ -1,0 +1,17 @@
+<h1>Choose your group to show here</h1>
+{% csrf_token %}
+<form action=show_members.html method=GET>
+<label>Gruppenname
+<select name=group> 
+{% for group in group_list %}
+    <option>{{group}}</option>
+{% endfor %}
+</select>
+</label>
+<input type="submit" label="Anzeigen">
+</form>
+
+{% for member in member_list %}
+    <li>{{member}}</li>
+{% endfor %}
+
