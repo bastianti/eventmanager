@@ -1,5 +1,30 @@
 <html>
 <title>{{title}}</title>
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" type="text/css" media="all" />
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+
+<style>
+.user_table th {
+    background-color: lightblue;
+    border-bottom: 1px solid #ddd;
+}
+.user_table tr {
+}
+.user_table tr:hover {
+    background-color: #ddd;
+}
+.user_table td {
+    border-bottom: 1px solid #ddd;
+    padding: 0px
+}
+.user_table {
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+    
+</style>
 <h1>Erstelle die Einladung für {{title}}</h1>
 <table>
 <tr>
@@ -9,4 +34,61 @@
 <td>Datum</td><td>{{date}}</td>
 </tr>
 </table>
+<script>
+$(function() {
+  $("#groups").autocomplete({
+    source: "../contacts/get_groups",
+    minLength: 1,
+    select: function( event, ui ) {
+        update_user_table(ui);
+      },
+
+  });
+});
+
+function update_user_table(ui) {
+    $.get('../contacts/get_members?group_name='+ui.item.label, function(members) {
+        $('#user_table').html(members);
+        console.log(members);
+        members = JSON.parse(members)
+        
+        // Get Headers 
+        var col = [];
+        for (var i = 0; i < members.length; i++) {
+            for (var key in members[i]) {
+                if (col.indexOf(key) === -1) {
+                    col.push(key);
+                }
+            }
+        }
+        var table = document.createElement("table");
+        table.className = "user_table";
+        var tr = table.insertRow(-1);                   // TABLE ROW.
+        for (var i = 0; i < col.length; i++) {
+            var th = document.createElement("th");      // TABLE HEADER.
+            th.innerHTML = col[i];
+            tr.appendChild(th);
+        }
+        for (var i = 0; i < members.length; i++) {
+            tr = table.insertRow(-1);
+            for (var j = 0; j < col.length; j++) {
+                var tabCell = tr.insertCell(-1);
+                tabCell.innerHTML = members[i][col[j]];
+            }
+        }
+        var divContainer = document.getElementById("user_table_div");
+        divContainer.innerHTML = "";
+        divContainer.appendChild(table);
+
+   });
+};
+
+</script>
+
+<form method=GET">
+    <label for="groups"> <input type id="groups">
+</form>
+<div id="user_table_div">
+</div>
+
 </html>

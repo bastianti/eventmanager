@@ -4,6 +4,7 @@ from django.template import loader
 from wsgiref.util import FileWrapper
 
 import os
+import json
 
 
 import csv
@@ -69,9 +70,9 @@ def export_csv(request):
     wanted_data['first_name'] = 'selected'
     wanted_data['last_name'] = 'selected'
     wanted_data['email'] = 'selected'
-    # Needs always be selected
- 
 
+
+    # Needs always be selected
     for key, value in wanted_data.iteritems():
         if value == 'selected':
             headers.append(key)
@@ -91,15 +92,39 @@ def export_csv(request):
                 tmp[key] = value
         final_list.append(tmp)
     print final_list
+    final_list.sort()
+    print final_list
+
      
 
+    
     filename = "/tmp/export_{0}.csv".format(time.time())
     with open(filename, "wb") as f:
-        w = csv.DictWriter(f, fieldnames=headers)
-        w.writeheader()
+	row = []
+        w = csv.writer(f)
+        if "id" in headers:
+            row.append('id')
+        if "first_name" in headers:
+            row.append("Vorname")
+        if "last_name" in headers:
+            row.append("Nachname")
+        if "email" in headers:
+	    row.append("EMail")
+        w.writerow(row)
+
+
         for value in final_list:
-            print value
-            w.writerow(value) 
+	    row = []
+            if "id" in headers:
+	        row.append(value['id'])
+            if "first_name" in headers:
+	        row.append(value['first_name'])
+            if "last_name" in headers:
+	        row.append(value['last_name'])
+            if "email" in headers:
+	        row.append(value['email'])
+
+            w.writerow(row)
 
     
     wrapper = FileWrapper(file(filename))
@@ -108,4 +133,41 @@ def export_csv(request):
     response['Content-Disposition'] = 'attachment; filename="kontakte.csv"'
     return response
 
+def get_groups(request):
+    if request.is_ajax():
+        q = request.GET.get('term', '')
+        groups = Group.objects.filter(name__icontains = q)[:20]
+        results = []
+        for group in groups:
+            group_json = {}
+            group_json['id'] = group.id
+            group_json['label'] = group.name
+            group_json['value'] = group.name
+            results.append(group_json)
+
+        data = json.dumps(results)
+
+    else:
+        data = 'fail'
+
+    mimetype = 'application/json'
+    return HttpResponse(data, mimetype)
+
+def get_members(request):
+    group_name = request.GET['group_name']
+    print group_name
+
+    gid = Group.objects.filter(name=group_name)[0].id
+    member_list = User.objects.filter(group=gid)
+
+    result = []
+    for member in member_list:
+        member_json = {}
+	member_json['Vorname'] = str(member.first_name.encode('ascii', 'ignore').replace('"',"'" ))
+	member_json['Nachname'] = str(member.last_name.encode('ascii', 'ignore').replace('"', '"'))
+	member_json['EMail'] = str(member.email.encode('ascii', 'ignore').replace('"', '"'))
+	result.append(member_json)
+	
+    result = json.dumps(result)
+    return HttpResponse(result)
 
