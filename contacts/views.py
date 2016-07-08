@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from wsgiref.util import FileWrapper
+from django.db.models import Q
 
 import os
 import json
@@ -30,6 +31,9 @@ def show_members(request):
      } 
      return HttpResponse(template.render(context, request))
 
+
+
+    
 def details(request):
     template = loader.get_template("contacts/user_detail.html")
 
@@ -100,7 +104,7 @@ def export_csv(request):
     
     filename = "/tmp/export_{0}.csv".format(time.time())
     with open(filename, "wb") as f:
-	row = []
+        row = []
         w = csv.writer(f)
         if "id" in headers:
             row.append('id')
@@ -109,20 +113,20 @@ def export_csv(request):
         if "last_name" in headers:
             row.append("Nachname")
         if "email" in headers:
-	    row.append("EMail")
+            row.append("EMail")
         w.writerow(row)
 
 
         for value in final_list:
-	    row = []
+            row = []
             if "id" in headers:
-	        row.append(value['id'])
+                row.append(value['id'])
             if "first_name" in headers:
-	        row.append(value['first_name'])
+                row.append(value['first_name'])
             if "last_name" in headers:
-	        row.append(value['last_name'])
+                row.append(value['last_name'])
             if "email" in headers:
-	        row.append(value['email'])
+                row.append(value['email'])
 
             w.writerow(row)
 
@@ -133,7 +137,7 @@ def export_csv(request):
     response['Content-Disposition'] = 'attachment; filename="kontakte.csv"'
     return response
 
-def get_groups(request):
+def get_grouplist(request):
     if request.is_ajax():
         q = request.GET.get('term', '')
         groups = Group.objects.filter(name__icontains = q)[:20]
@@ -163,11 +167,54 @@ def get_members(request):
     result = []
     for member in member_list:
         member_json = {}
-	member_json['Vorname'] = str(member.first_name.encode('ascii', 'ignore').replace('"',"'" ))
-	member_json['Nachname'] = str(member.last_name.encode('ascii', 'ignore').replace('"', '"'))
-	member_json['EMail'] = str(member.email.encode('ascii', 'ignore').replace('"', '"'))
-	result.append(member_json)
-	
+        member_json['ID'] = str(member.id)
+        member_json['Vorname'] = str(member.first_name)
+        member_json['Nachname'] = str(member.last_name)
+        member_json['EMail'] = str(member.email)
+        result.append(member_json)
+        print member_json
+    
     result = json.dumps(result)
     return HttpResponse(result)
+
+def get_memberlist(request):
+    if request.is_ajax():
+        q = request.GET.get('term', '')
+        users = User.objects.filter(Q(first_name__icontains=q) | Q(last_name__icontains=q))
+        results = []
+        for user in users:
+            user_json = {}
+            user_json['id'] = user.id
+            user_json['label'] = "{0} {1}".format(user.first_name, user.last_name)
+            user_json['value'] = "{0} {1}".format(user.first_name, user.last_name)
+            results.append(user_json)
+        data = json.dumps(results)
+
+    else:
+        data = 'fail'
+
+    mimetype = 'application/json'
+    return HttpResponse(data, mimetype)
+
+
+def get_user(request):
+    member_name = request.GET["user_name"].split(" ")
+    member_first_name = member_name[0]
+    member_last_name = member_name[1]
+
+    member = User.objects.filter(first_name=member_first_name).filter(last_name=member_last_name)[0]
+
+    member_json = {}
+    member_json['ID'] = member.id
+    member_json['Vorname'] = member.first_name
+    member_json['Nachname'] = member.last_name
+    member_json['EMail'] = member.email
+    
+    result = json.dumps(member_json)
+    print result
+    return HttpResponse(result)
+   
+
+def send_invite(request):
+    print request.GET["invite_ids"]
 

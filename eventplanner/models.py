@@ -7,22 +7,18 @@ class Event(models.Model):
     date     = models.DateField()
     location = models.CharField(max_length=100)
     owner    = models.CharField(max_length=100)
+    text     = models.TextField()
     def __str__(self):
         return self.title
     
 
-class Invite(models.Model):
-    tn_status = (
-                    ('+', 'Teilnahme'),
-	            ('0', 'Unklar'),
-	            ('-', 'Absage'),
-                )
-
-    tnstatus = models.CharField(max_length=1, choices=tn_status, default='0')
-    text     = models.TextField()
-    groups   = models.ManyToManyField('contacts.Group', blank=True)
-    user     = models.ManyToManyField('contacts.User', blank=True)
-    event    = models.ForeignKey('Event')
-
-    def __str__(self):
-        return str(self.event)
+class User_Invite(models.Model):
+    tn_status  = (
+                   ('+', 'Teilnahme'),
+                   ('0', 'Unklar'),
+                   ('-', 'Absage'),
+                 )
+    tnstatus  = models.CharField(max_length=100, choices=tn_status, default='0')
+    user      = models.ForeignKey('contacts.User', blank=True)
+    event     = models.ForeignKey('Event')
+    user_hash = models.CharField(max_length=30)
